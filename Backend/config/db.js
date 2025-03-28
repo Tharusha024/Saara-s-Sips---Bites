@@ -54,20 +54,40 @@ function createUserTable(){
             return;
         }
         console.log('successfull create user table');
-        createProductTable();
+        createCategories();
+        
     });
+};
+function createCategories(){
+    const sql =`CREATE TABLE IF NOT EXISTS categories (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);`;
+
+db.query(sql,(error)=>{
+    if(error){
+        console.log('failed create categories table',error);
+        return;
+    }
+    console.log('successfull create categories table'); 
+    createProductTable();
+})
 };
 
 function createProductTable(){
     const sql =`CREATE TABLE IF NOT EXISTS products (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(255) NOT NULL,
-        category VARCHAR(100) NOT NULL,
-        price DECIMAL(10,2) NOT NULL,
-        image_url TEXT,
-        description TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    category_id INT,  -- Changed from category VARCHAR to category_id INT
+    price DECIMAL(10,2) NOT NULL,
+    image_url TEXT,
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'Available',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
     );`;
     db.query(sql,(error) =>{
         if(error){
@@ -115,8 +135,11 @@ function createOrderItemsTable(){
             return;
         }
         console.log('successfull create order items table');
+        
     });
 };
+
+
 
 export default db;
 
