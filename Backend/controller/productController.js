@@ -1,25 +1,33 @@
 import {db} from '../config/db.js'
 
 export const addProduct =(req,res)=>{
-    const q=`INSERT INTO products (name,category_id,price,image_url,description) VALUES (?,?,?,?,?)`
-    const values =[req.body.name,req.body.category_id,req.body.price,req.body.image_url,req.body.description]
+    const categoryName=req.body.category_name;
+    const categoryQuery =`SELECT id FROM categories WHERE name=?`;
+    db.query(categoryQuery,[categoryName],(error,data)=>{
+        if(error){
+            return res.send(error)
+        }
+        if (data.length === 0) return res.status(404).json({ message: "Category not found" });
+        const category_id = data[0].id;
+ 
+
+    const q=`INSERT INTO products (name,category_id,price,image_url,description) VALUES (?,?,?,?,?)`;
+    const values =[req.body.name,category_id,req.body.price,req.body.image_url,req.body.description]
     db.query(q,values,(error,data)=>{
         if(error){
             return res.send(error)
         }
-        return res.status(200).json({
-            message: "Product added successfully!",
-            product: {
-                id: data.insertId,
-                name: req.body.name,
-                category: req.body.category,
-                price: req.body.price,
-                image_url: req.body.image_url,
-                description: req.body.description,
-                createDate: new Date().toISOString()
-            }})
+        const q = `SELECT * FROM products WHERE id=?`
+        db.query(q,[data.insertId],(error,data)=>{
+            if(error){
+                return res.send(error);
+            }
+            return res.status(200).json(data)
     })
+})
 }
+    )}
+
 
 export const getProduct =(req,res)=>{
  const q =`SELECT * FROM products`
