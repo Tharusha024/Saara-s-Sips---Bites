@@ -1,0 +1,69 @@
+export const addOrder = async (req, res) => {
+    try {
+        const { user_id, products } = req.body;
+        let totalPrice = 0;
+
+        if (!user_id || !Array.isArray(products) || products.length === 0) {
+            return res.status(400).json({ error: "Invalid request data" });
+        }
+
+        // Ensure user exists
+        const [userCheck] = await db.query(`SELECT id FROM users WHERE id = ?`, [user_id]);
+        if (userCheck.length === 0) {
+            return res.status(400).json({ error: "Invalid user_id" });
+        }
+
+        // Insert order (initial total_price = 0)
+        const q = `INSERT INTO orders (user_id, total_price) VALUES (?, ?)`;
+        const [result] = await db.execute(q, [user_id, totalPrice]);
+        console.log("DB Execute Result:", result);
+
+        if (!result || !result.insertId) {
+            throw new Error("Failed to create order");
+        }
+
+        const orderId = result.insertId;
+
+        // Extract product IDs
+        const productIds = products.map(p => p.product_id);
+        const [productDetails] = await db.query(
+            `SELECT id AS product_id, name AS product_name, price AS product_price 
+             FROM product WHERE id IN (?)`, [productIds]
+        );
+
+        if (productDetails.length !== productIds.length) {
+            return res.status(400).json({ error: "Some product IDs are invalid" });
+        }
+
+        // Prepare order items and calculate total price
+        const orderItems = [];
+        for (const { product_id, quantity } of products) {
+            const product = productDetails.find(p => p.product_id === product_id);
+            if (!product) {
+                return res.status(400).json({ error: `Product ID ${product_id} not found` });
+            }
+            const total_items_price = product.product_price * quantity;
+            totalPrice += total_items_price;
+            orderItems.push([orderId, product_id, quantity]);
+        }
+
+        // Insert order items
+        if (orderItems.length > 0) {
+            await db.query(
+                `INSERT INTO order_items (order_id, product_id, quantity) VALUES ?`,
+                [orderItems]
+            );
+        }
+
+        // Update order total price
+        await db.execute(
+            `UPDATE orders SET total_price = ? WHERE id = ?`,
+            [totalPrice, orderId]
+        );
+
+        res.status(201).json({ message: 'Order created successfully', order_id: orderId, total_price: totalPrice });
+    } catch (error) {
+        console.error("Error adding order:", error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
