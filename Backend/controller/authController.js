@@ -1,6 +1,7 @@
 import {db} from "../config/db.js"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
+import { notifyNewUser } from "../notification/mails.js"
 export const register = (req,res)=>{
 
     // check user existing
@@ -17,6 +18,10 @@ export const register = (req,res)=>{
 
     db.query(q,[values], (error,data)=>{
         if(error) return res.json(error);
+        const userName = req.body.name;
+        const userEmail= req.body.email;
+        const userInfo ={userName,userEmail}
+        notifyNewUser(userInfo);
         return res.status(200).json("user has been created")
     })
   })

@@ -38,13 +38,13 @@ db.connect((error)=>{
 });
 
 function createUserTable(){
-    const SQL = `
-    CREATE TABLE IF NOT EXISTS users (
+    const SQL = `CREATE TABLE IF NOT EXISTS users (
         id INT PRIMARY KEY AUTO_INCREMENT,
         name VARCHAR(100) NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
-        role ENUM('admin', 'registered_user', 'guest') DEFAULT 'guest',
+        role ENUM('admin', 'user') DEFAULT 'user',
+        notifications_enabled BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );`;
@@ -136,11 +136,65 @@ function createOrderItemsTable(){
             return;
         }
         console.log('successfull create order items table');
+        createOffersTable()
+    });
+};
+function createOffersTable(){
+    const sql =`CREATE TABLE IF NOT EXISTS offers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    start_date DATE,
+    end_date DATE
+    );`;
+    db.query(sql,(error)=>{
+        if(error){
+            console.log('failed create offers table',error);
+            return;
+        }
+        console.log('successfull create offers table');
+        createOfferProductsTable()
+    });
+};
+function createOfferProductsTable(){
+    const sql =`CREATE TABLE IF NOT EXISTS offer_products (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                offer_id INT,
+                product_id INT,
+                quantity INT DEFAULT 1,
+                FOREIGN KEY (offer_id) REFERENCES offers(id) ON DELETE CASCADE,
+                FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+                );`;
+    db.query(sql,(error)=>{
+        if(error){
+            console.log('failed create offer products table',error);
+            return;
+        }
+        console.log('successfull create offer products table');
+        createOffersOrdersTable()
+    });
+};
+function createOffersOrdersTable(){
+    const sql =`CREATE TABLE IF NOT EXISTS offer_orders (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                user_id INT NOT NULL,
+                offer_id INT NOT NULL,
+                offer_price DECIMAL(10, 2) NOT NULL,
+                status ENUM('pending', 'completed', 'canceled') DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (offer_id) REFERENCES offers(id) ON DELETE CASCADE
+        );`;
+    db.query(sql,(error)=>{
+        if(error){
+            console.log('failed create offer orders table',error);
+            return;
+        }
+        console.log('successfull create offers orders table');
         
     });
 };
-
-
 
 export default db;
 

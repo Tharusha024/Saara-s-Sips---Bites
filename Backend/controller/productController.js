@@ -1,4 +1,5 @@
 import {db} from '../config/db.js'
+import { notifyNewProduct } from '../notification/mails.js';
 
 export const addProduct =(req,res)=>{
     const categoryName=req.body.category_name;
@@ -12,11 +13,17 @@ export const addProduct =(req,res)=>{
  
 
     const q=`INSERT INTO products (name,category_id,price,image_url,description) VALUES (?,?,?,?,?)`;
-    const values =[req.body.name,category_id,req.body.price,req.body.image_url,req.body.description]
+    const name=req.body.name;
+    const price=req.body.price;
+    const image_url=req.body.image_url;
+    const description=req.body.description;
+    const values =[name,category_id,price,image_url,description]
     db.query(q,values,(error,data)=>{
         if(error){
             return res.send(error)
         }
+        const product = {name,price,image_url,description}
+        notifyNewProduct(product);
         const q = `SELECT * FROM products WHERE id=?`
         db.query(q,[data.insertId],(error,data)=>{
             if(error){

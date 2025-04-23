@@ -1,4 +1,5 @@
 import db from "../config/db.js";
+import { notifyNewOrderAdmin, notifyNewOrderUser, notifyOrderCompleted } from "../notification/mails.js";
 export const addOrder = async (req, res) => {
     const { user_id, products } = req.body;
     let totalPrice = 0;
@@ -9,7 +10,7 @@ export const addOrder = async (req, res) => {
 
     try {
         // Ensure user exists
-        const q = `SELECT id FROM users WHERE id = ?`;
+        const q = `SELECT id,name,email FROM users WHERE id = ?`;
         db.query(q, [user_id], (error, data) => {
             if (error) {
                 return res.status(500).send(error);
@@ -17,7 +18,8 @@ export const addOrder = async (req, res) => {
             if (data.length === 0) {
                 return res.status(404).json({ message: "User invalid" });
             }
-
+            const userName= data[0].name;
+            const userEmail= data[0].email;
             const q = `INSERT INTO orders (user_id, total_price) VALUES (?, ?)`;
             db.query(q, [user_id, totalPrice], (error, data) => {
                 if (error) {
@@ -36,14 +38,21 @@ export const addOrder = async (req, res) => {
                     if (productData.length === 0) {
                         return res.status(404).json({ message: "Invalid product IDs" });
                     }
-
+                    const product_name = productData.map(row => row.product_name);
                     // Calculate total price and insert order items
                     let totalItemPrice = 0;
+                    const orderItems =[];
                     const insertPromises = products.map(item => {
                         const product = productData.find(p => p.product_id === item.product_id);
                         if (product) {
                             const itemPrice = product.product_price * item.quantity;
                             totalPrice += itemPrice;
+
+                            orderItems.push({
+                                name: product.product_name,
+                                price: product.product_price,
+                                quantity: item.quantity
+                            });
 
                             const q = `INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)`;
                             return new Promise((resolve, reject) => {
@@ -66,6 +75,15 @@ export const addOrder = async (req, res) => {
                                 if (error) {
                                     return res.status(500).send(error);
                                 }
+                                const orderInfo = {
+                                    id: orderId,
+                                    user_name: userName,
+                                    user_email:userEmail,
+                                    items: orderItems,
+                                    total: totalPrice.toFixed(2)
+                                };
+                                notifyNewOrderUser(orderInfo);
+                                notifyNewOrderAdmin(orderInfo);
                                 return res.status(200).json({ message: "Order placed successfully", orderId });
                             });
                         })
@@ -198,19 +216,32 @@ export const getOrderStatus=(req,res)=>{
 
 export const updateOrderStatusCompleted=(req,res)=>{
     const order_id =req.params.id;
-    const q=`SELECT id FROM orders WHERE id=?`
+    const q=`SELECT id,user_id,total_price FROM orders WHERE id=?`
         db.query(q,[order_id],(error,data)=>{
             if(error){
                 return res.status(500).send(error);  
             }
             if(data.length===0) {return  res.status(404).json({ message: "Order id is invalid" });}
-            const q =`UPDATE orders SET status = 'completed',completed_at = CURRENT_TIMESTAMP WHERE id=?`
-            db.query(q,[order_id],(error)=>{
+            const userId = data[0].user_id;
+            const totalPrice =data[0].total_price;
+            const qUserName = `SELECT name,email FROM users WHERE id=?`
+            db.query(qUserName,[userId],(error,data)=>{
+                if(error){
+                    return res.status(500).send(error);  
+                }
+                const userName = data[0].name;
+                const userEmail = data[0].email;
+                const q =`UPDATE orders SET status = 'completed',completed_at = CURRENT_TIMESTAMP WHERE id=?`
+                db.query(q,[order_id],(error)=>{
                 if(error){
                     return res.status(500).send(error);
                 } 
+                const orderInfo = {order_id,userName,userEmail,totalPrice}
+                notifyOrderCompleted(orderInfo);
                 return res.status(200).json({message:"order status change into completed"})
             })
+            }) 
+            
         })
 
 }
@@ -270,11 +301,25 @@ export const deleteOrder=(req,res)=>{
        
 }
 export const getDaliyIncomeToday=(req,res)=>{
-        const q=`SELECT SUM(total_price) AS total_income`
+        const q=`SELECT SUM(total_price) AS today_total_income FROM orders WHERE status ='completed' AND DATE(completed_at)=CURDATE()`
+        db.query(q,(error,data)=>{
+            if(error){
+                return res.status(200).send(error);
+            }
+            return res.status(200).json(data[0].today_total_income);
+        })
 
 
 }
 export const getDaliyIncome=(req,res)=>{
+        const q =`SELECT SUM(total_price) AS total_income FROM orders WHERE status ='completed' AND DATE(completed_at)=?`
+        const income_date = req.params.date;
+        db.query(q,[income_date],(error,data)=>{
+            if(error){
+                return res.status(400).send(error);
+            }
+            return res.status(200).json(data[0].total_income)
+        })
 
 
 
