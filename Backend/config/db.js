@@ -143,6 +143,8 @@ function createOffersTable(){
     const sql =`CREATE TABLE IF NOT EXISTS offers (
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    image_url VARCHAR(255) NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
     start_date DATE,

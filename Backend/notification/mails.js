@@ -27,12 +27,49 @@ export const notifyNewProduct = async (product) => {
   export const notifyNewOffers = async (offer) => {
     const subject = `🎉 New Offer Just Dropped: ${offer.title}`;
     const html = `
-      <h2>Special Offer: ${offer.title}</h2>
-      <p>${offer.description}</p>
-      <p><strong>Valid Until:</strong> ${offer.valid_until}</p>
-      <img src="${offer.image_url}" alt="Offer Banner" style="width:300px; border-radius:10px; margin-top:10px;">
-      <p><a href="https://your-website.com/offers" style="color: white; background-color: #ffc107; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Grab the Deal</a></p>
-    `;
+  <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: auto;">
+    <h2 style="color: #ff6f00;">🎉 Just for You: ${offer.title}</h2>
+    
+    <p style="font-size: 16px;">We're excited to bring you an exclusive offer! Here's what you need to know:</p>
+    
+    <table style="width: 100%; background-color: #f9f9f9; padding: 15px; border-radius: 10px; margin: 20px 0;">
+      <tr>
+        <td><strong>💰 Special Price:</strong></td>
+        <td>$${offer.price}</td>
+      </tr>
+      <tr>
+        <td><strong>📅 Starts:</strong></td>
+        <td>${offer.start_date}</td>
+      </tr>
+      <tr>
+        <td><strong>⏳ Ends:</strong></td>
+        <td>${offer.end_date}</td>
+      </tr>
+    </table>
+
+    <p>${offer.description}</p>
+
+    <img src="${offer.image_url}" alt="Special Offer" 
+         style="width: 100%; max-width: 500px; border-radius: 10px; margin: 20px 0;">
+
+    <p style="text-align: center;">
+      <a href="https://your-website.com/offers" 
+         style="background-color: #ff6f00; color: white; padding: 12px 25px; text-decoration: none; 
+                border-radius: 5px; font-weight: bold; display: inline-block;">
+        👉 Claim Your Deal Now
+      </a>
+    </p>
+
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+    <p style="font-size: 14px; color: #777;">You’re receiving this because you signed up at <strong>Saara’s Sips & Bites</strong>. 
+    Offers like this don’t come often — don’t miss out!</p>
+
+    <p style="font-size: 12px; color: #aaa;">
+      Need help? <a href="mailto:support@your-website.com">Contact support</a> anytime.
+    </p>
+  </div>
+`;
     
   
     try {
@@ -50,14 +87,47 @@ export const notifyNewProduct = async (product) => {
 
    export const notifyOrderCompleted = async (order) => {
    const subject = `✅ Order #${order.order_id} Completed – Thank You!`;
-const html = `
-  <h2>Your Order is Complete!</h2>
-  <p>Hi ${order.userName},</p>
-  <p>Your order <strong>#${order.order_id}</strong> has been successfully completed. We hope you enjoyed it!</p>
-  <p><strong>Total:</strong> $${order.totalPrice}</p>
-  <p>We'd love to hear your feedback. 😋</p>
-  <img src="https://your-website.com/thank-you.jpg" alt="Thank You" style="width:300px; border-radius:10px; margin-top:10px;">
-  <p><a href="https://your-website.com/review/${order.order_id}" style="color: white; background-color: #17a2b8; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Leave a Review</a></p>
+const html =`
+  <div style="font-family: 'Segoe UI', sans-serif; color: #333; max-width: 600px; margin: auto; line-height: 1.6;">
+    <h2 style="color: #28a745;">✅ Your Order is Complete!</h2>
+
+    <p>Hi <strong>${order.userName}</strong>,</p>
+
+    <p>Thank you for ordering with <strong>Saara’s Sips & Bites</strong>! 🥤🍰</p>
+    
+    <p>Your order <strong>#${order.order_id}</strong> was successfully completed. We hope everything was delicious and just how you wanted it!</p>
+
+    <table style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+      <tr>
+        <td><strong>🧾 Order ID:</strong></td>
+        <td>#${order.order_id}</td>
+      </tr>
+      <tr>
+        <td><strong>💳 Total Paid:</strong></td>
+        <td>$${order.totalPrice}</td>
+      </tr>
+    </table>
+
+    <p style="font-size: 16px;">We'd love to hear what you thought — your feedback means the world to us! 😋</p>
+
+    <img src="https://your-website.com/thank-you.jpg" alt="Thank You" 
+         style="width: 100%; max-width: 450px; border-radius: 10px; margin: 20px 0; display: block;">
+
+    <p style="text-align: center;">
+      <a href="https://your-website.com/review/${order.order_id}" 
+         style="background-color: #17a2b8; color: white; padding: 12px 25px; text-decoration: none; 
+                border-radius: 5px; font-weight: bold; display: inline-block;">
+        ✍️ Leave a Review
+      </a>
+    </p>
+
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+    <p style="font-size: 14px; color: #888;">
+      Need help with your order? 
+      <a href="mailto:support@your-website.com" style="color: #17a2b8;">Contact us</a> anytime.
+    </p>
+  </div>
 `;
     
   
@@ -145,3 +215,33 @@ const html = `
       console.error('❌ Error sending notifications:', error.message);
     }
   };
+
+  export const notifyNewOfferOrderAdmin = async (offer_order) => {
+    const subject = `🛒 New Order Placed: Order #${order.id}`;
+    const html = `
+      <h2>New Order Received</h2>
+      <p><strong>Customer:</strong> ${order.user_name}</p>
+      <p><strong>Email:</strong> ${order.user_email}</p>
+      <p><strong>Order ID:</strong> #${order.id}</p>
+      <p><strong>Total:</strong> $${order.total}</p>
+      <ul>
+        ${order.items.map(item => `<li>${item.quantity}x ${item.name} - $${item.price}</li>`).join('')}
+      </ul>
+      <p><a href="https://your-website.com/admin/orders/${order.id}" style="color: white; background-color: #6f42c1; padding: 10px 15px; text-decoration: none; border-radius: 5px;">View Order</a></p>
+    `;
+
+    
+  
+    try {
+      const emails = await getNotifiableAdmin();
+  
+      for (const email of emails) {
+        await sendEmail(email, subject, '', html);
+      }
+  
+      console.log('✅ Notification sent to all admins.');
+    } catch (error) {
+      console.error('❌ Error sending notifications:', error.message);
+    }
+  };
+

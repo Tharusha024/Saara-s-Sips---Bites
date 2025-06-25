@@ -7,6 +7,7 @@ import productRoutes from './routes/productRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import categoriesRoutes from './routes/categoriesRoutes.js'
 import offersRoutes from './routes/offersRoutes.js'
+import offerOrderRoutes from './routes/offerOrderRoutes.js'
 import cookieParser from 'cookie-parser'
 
 dotenv.config()
@@ -21,6 +22,7 @@ app.use("/api/product",productRoutes);
 app.use("/api/user",userRoutes);
 app.use("/api/category",categoriesRoutes);
 app.use("/api/offers",offersRoutes);
+app.use("/api/offers",offerOrderRoutes);
 
 
 app.listen(process.env.PORT, () => {
